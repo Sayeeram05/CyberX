@@ -1,0 +1,590 @@
+{% extends 'base.html' %} {% load static %} {% block title %}URL Threat
+Detection — CyberX Security Platform{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/services.css' %}" />
+<link rel="stylesheet" href="{% static 'css/urlthreatdetection.css' %}" />
+{% endblock %} {% block content %}
+<div class="container">
+  <!-- ═══ HERO ═══ -->
+  <section class="service-hero">
+    <h1 class="glitch" data-text="URL THREAT DETECTION">
+      URL THREAT DETECTION
+      <span class="version-badge">v3.0</span>
+    </h1>
+    <p class="hero-subtitle">
+      6-step AI-powered pipeline — blocklist, domain intelligence, structure
+      analysis, reputation heuristics, IP analysis, and 3-model ML ensemble
+      in&nbsp;seconds.
+    </p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-number">6</span
+        ><span class="stat-label">Pipeline Steps</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">35+</span
+        ><span class="stat-label">Features Analyzed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">3</span
+        ><span class="stat-label">ML Models</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">&lt;3s</span
+        ><span class="stat-label">Analysis Time</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FORM ═══ -->
+  <section class="scanner-section">
+    <div class="service-form-card">
+      <div class="form-header">
+        <h2><i class="fas fa-crosshairs"></i> URL Threat Scanner</h2>
+        <p>
+          Enter any URL to run through the full 6-step threat analysis pipeline
+        </p>
+      </div>
+      <form
+        method="post"
+        action="{% url 'urlthreatdetection:index' %}"
+        id="urlScanForm"
+      >
+        {% csrf_token %}
+        <div class="input-group">
+          <label for="url">URL Address</label>
+          <i class="fas fa-link input-icon"></i>
+          <input
+            type="text"
+            id="url"
+            name="url"
+            placeholder="https://example.com"
+            value="{{ result.url|default:'' }}"
+            required
+            autocomplete="url"
+          />
+          <div class="format-hint" id="formatHint"></div>
+        </div>
+        <button type="submit" class="btn-service" id="submitBtn">
+          <i class="fas fa-shield-virus"></i>
+          <span>Scan URL</span>
+        </button>
+      </form>
+      <div class="loading-indicator" id="loadingIndicator">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Running 6-step threat analysis pipeline…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ERROR ═══ -->
+  {% if error %}
+  <div class="error-banner">
+    <i class="fas fa-exclamation-triangle"></i>
+    <div class="error-text"><strong>Error:</strong> {{ error }}</div>
+  </div>
+  {% endif %}
+
+  <!-- ═══ RESULTS ═══ -->
+  {% if result %}
+  <section class="results-section">
+    <div class="result-card">
+      <!-- ── Header ── -->
+      <div class="result-header {{ result.status_color }}">
+        <div class="result-icon {{ result.status_color }}">
+          <i class="{{ result.status_icon }}"></i>
+        </div>
+        <div class="result-title {{ result.status_color }}">
+          <h3>{{ result.title }}</h3>
+          <p>{{ result.explanation }}</p>
+        </div>
+        {% if result.processing_time_ms %}
+        <div class="processing-time">
+          <i class="fas fa-bolt"></i> {{ result.processing_time_ms|floatformat:0 }}ms
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="result-body">
+        <!-- ── URL Display ── -->
+        <div class="url-display">
+          <i class="fas fa-globe"></i>
+          <div class="url-text">
+            {{ result.url }} {% if result.normalized_url != result.url %}
+            <span class="normalized-badge">normalized</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ── Quick Details ── -->
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Domain</div>
+            <div class="detail-value">{{ result.domain }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Protocol</div>
+            <div class="detail-value">{{ result.protocol|upper }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Length</div>
+            <div class="detail-value">{{ result.url_length }} chars</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">ML Prediction</div>
+            <div class="detail-value">
+              {% if result.ml_prediction == 'Safe' %}
+              <i class="fas fa-check-circle check"></i>
+              {% else %}
+              <i class="fas fa-times-circle cross"></i>
+              {% endif %} {{ result.ml_prediction }}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Confidence</div>
+            <div class="detail-value">{{ result.confidence_score }}%</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">HTTPS</div>
+            <div class="detail-value">
+              {% if result.url_features.https_enabled %}
+              <i class="fas fa-lock check"></i> Yes {% else %}
+              <i class="fas fa-unlock cross"></i> No {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Threat Gauge ── -->
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-tachometer-alt"></i> Threat Score
+          </h4>
+          <div class="threat-gauge-container">
+            <div class="threat-gauge">
+              <svg viewBox="0 0 120 70">
+                <path
+                  class="threat-gauge-bg"
+                  d="M 10 65 A 50 50 0 0 1 110 65"
+                />
+                <path
+                  class="threat-gauge-fill"
+                  id="threatArc"
+                  d="M 10 65 A 50 50 0 0 1 110 65"
+                  data-threat-score="{{ result.threat_score }}"
+                  style="stroke-dasharray:164;stroke-dashoffset:164;
+                  stroke:{% if result.threat_score < 25 %}var(--primary-color){% elif result.threat_score < 50 %}#ffc107{% elif result.threat_score < 75 %}#ff8c00{% else %}var(--accent-red){% endif %};"
+                />
+              </svg>
+              <div
+                class="threat-gauge-value"
+                data-score="{{ result.threat_score }}"
+                style="color:{% if result.threat_score < 25 %}var(--primary-color){% elif result.threat_score < 50 %}#ffc107{% elif result.threat_score < 75 %}#ff8c00{% else %}var(--accent-red){% endif %};"
+              >
+                0
+              </div>
+            </div>
+            <div class="threat-gauge-scale">
+              <span>0</span><span>25</span><span>50</span><span>75</span
+              ><span>100</span>
+            </div>
+            <div
+              class="threat-gauge-label"
+              style="color:{% if result.threat_score < 25 %}var(--primary-color){% elif result.threat_score < 50 %}#ffc107{% elif result.threat_score < 75 %}#ff8c00{% else %}var(--accent-red){% endif %};"
+            >
+              {{ result.risk_level|upper }}
+            </div>
+          </div>
+
+          <!-- Component Scores -->
+          {% if result.risk_details.component_scores %}
+          <div class="comp-scores">
+            <div class="comp-scores-title">Component Breakdown</div>
+            {% for name, score in result.risk_details.component_scores.items %}
+            <div class="comp-row">
+              <div class="comp-label">{{ name }}</div>
+              <div class="comp-bar-wrap">
+                <div
+                  class="comp-bar-fill"
+                  data-width="{{ score }}"
+                  style="width:0;background:{% if score < 25 %}var(--primary-color){% elif score < 50 %}#ffc107{% elif score < 75 %}#ff8c00{% else %}var(--accent-red){% endif %};"
+                ></div>
+              </div>
+              <div
+                class="comp-value"
+                style="color:{% if score < 25 %}var(--primary-color){% elif score < 50 %}#ffc107{% elif score < 75 %}#ff8c00{% else %}var(--accent-red){% endif %};"
+              >
+                {{ score }}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- Contributing Factors -->
+          {% if result.risk_details.contributing_factors %}
+          <div class="contributing-factors">
+            <div class="comp-scores-title">Top Contributing Factors</div>
+            {% for f in result.risk_details.contributing_factors %}
+            <div class="factor-row">
+              <div class="factor-name">{{ f.factor }}</div>
+              <div class="factor-weight">{{ f.weight }}</div>
+              <div class="comp-bar-wrap">
+                <div
+                  class="comp-bar-fill"
+                  data-width="{{ f.score }}"
+                  style="width:0;background:{% if f.score < 25 %}var(--primary-color){% elif f.score < 50 %}#ffc107{% else %}var(--accent-red){% endif %};"
+                ></div>
+              </div>
+              <div
+                class="factor-score"
+                style="color:{% if f.score < 25 %}var(--primary-color){% elif f.score < 50 %}#ffc107{% else %}var(--accent-red){% endif %};"
+              >
+                {{ f.score }}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- ── 6-Step Pipeline ── -->
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-tasks"></i> 6-Step Analysis Pipeline
+          </h4>
+          <div class="validation-steps">
+            {% with s=result.validation_steps.normalization %}
+            <div
+              class="step-item {% if s.status == 'valid' %}passed{% elif s.status == 'warning' %}warning{% else %}info{% endif %}"
+            >
+              <div class="step-number">1</div>
+              <div
+                class="step-icon {% if s.status == 'valid' %}passed{% else %}warning{% endif %}"
+              >
+                <i
+                  class="fas fa-{% if s.status == 'valid' %}check{% else %}exclamation{% endif %}"
+                ></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">URL Normalization</div>
+                <div class="step-detail">{{ s.message }}</div>
+              </div>
+              <span class="step-badge">{% if s.status == 'valid' %}VALID{% else %}WARN{% endif %}</span>
+            </div>
+            {% endwith %} {% with s=result.validation_steps.blocklist_ip %}
+            <div
+              class="step-item {% if s.is_blocked %}failed{% elif s.is_shortener or s.has_ip_in_url %}warning{% else %}passed{% endif %}"
+            >
+              <div class="step-number">2</div>
+              <div
+                class="step-icon {% if s.is_blocked %}failed{% elif s.is_shortener or s.has_ip_in_url %}warning{% else %}passed{% endif %}"
+              >
+                <i
+                  class="fas fa-{% if s.is_blocked %}ban{% elif s.has_ip_in_url %}network-wired{% elif s.is_shortener %}compress-arrows-alt{% else %}check{% endif %}"
+                ></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Blocklist &amp; IP Check</div>
+                <div class="step-detail">{{ s.message }}</div>
+              </div>
+              <span class="step-badge"
+                >{% if s.is_blocked %}BLOCKED{% elif s.has_ip_in_url %}IP{% elif
+                s.is_shortener %}SHORTENER{% else %}CLEAR{% endif %}</span
+              >
+            </div>
+            {% endwith %} {% with s=result.validation_steps.domain_analysis %}
+            <div
+              class="step-item {% if s.is_trusted %}passed{% elif s.risk_level == 'high' %}failed{% elif s.risk_level == 'medium' %}warning{% else %}info{% endif %}"
+            >
+              <div class="step-number">3</div>
+              <div
+                class="step-icon {% if s.is_trusted %}passed{% elif s.risk_level == 'high' %}failed{% elif s.risk_level == 'medium' %}warning{% else %}info{% endif %}"
+              >
+                <i
+                  class="fas fa-{% if s.is_trusted %}shield-alt{% elif s.risk_level == 'high' %}calendar-times{% else %}info{% endif %}"
+                ></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Domain Analysis</div>
+                <div class="step-detail">{{ s.message }}</div>
+              </div>
+              <span class="step-badge">{% if s.is_trusted %}TRUSTED{% elif s.age_days != None %}{{ s.age_days }}d{% else %}N/A{% endif %}</span>
+            </div>
+            {% endwith %} {% with s=result.validation_steps.structure %}
+            <div
+              class="step-item {% if s.score == 0 %}passed{% elif s.score <= 20 %}info{% elif s.score <= 50 %}warning{% else %}failed{% endif %}"
+            >
+              <div class="step-number">4</div>
+              <div
+                class="step-icon {% if s.score == 0 %}passed{% elif s.score <= 50 %}warning{% else %}failed{% endif %}"
+              >
+                <i
+                  class="fas fa-{% if s.score == 0 %}check{% elif s.score <= 50 %}exclamation{% else %}times{% endif %}"
+                ></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">URL Structure</div>
+                <div class="step-detail">{{ s.message }}</div>
+                {% if s.issues %}
+                <ul class="structure-issues">
+                  {% for issue in s.issues %}
+                  <li><i class="fas fa-angle-right"></i> {{ issue }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </div>
+              <span class="step-badge">{{ s.score }}/100</span>
+            </div>
+            {% endwith %} {% with s=result.validation_steps.reputation %}
+            <div
+              class="step-item {% if s.score == 0 %}passed{% elif s.score <= 20 %}info{% elif s.score <= 50 %}warning{% else %}failed{% endif %}"
+            >
+              <div class="step-number">5</div>
+              <div
+                class="step-icon {% if s.score == 0 %}passed{% elif s.score <= 50 %}warning{% else %}failed{% endif %}"
+              >
+                <i
+                  class="fas fa-{% if s.score == 0 %}check{% elif s.score <= 50 %}flag{% else %}times{% endif %}"
+                ></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Reputation Heuristics</div>
+                <div class="step-detail">{{ s.message }}</div>
+              </div>
+              <span class="step-badge">{{ s.score }}/100</span>
+            </div>
+            {% endwith %} {% with s=result.validation_steps.ml %}
+            <div
+              class="step-item {% if s.prediction == 'Safe' %}passed{% elif s.status == 'unavailable' %}info{% else %}failed{% endif %}"
+            >
+              <div class="step-number">6</div>
+              <div
+                class="step-icon {% if s.prediction == 'Safe' %}passed{% elif s.status == 'unavailable' %}info{% else %}failed{% endif %}"
+              >
+                <i
+                  class="fas fa-{% if s.prediction == 'Safe' %}brain{% elif s.status == 'unavailable' %}question{% else %}brain{% endif %}"
+                ></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">ML Classification</div>
+                <div class="step-detail">{{ s.message }}</div>
+              </div>
+              <span class="step-badge">{{ s.prediction }}</span>
+            </div>
+            {% endwith %}
+          </div>
+        </div>
+
+        <!-- ── ML Model Predictions ── -->
+        {% if result.model_predictions %}
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-brain"></i> Model Predictions
+          </h4>
+          <div class="model-predictions">
+            {% for m in result.model_predictions %}
+            <div class="model-card">
+              <div class="model-icon">
+                <i class="{{ m.icon|default:'fas fa-cog' }}"></i>
+              </div>
+              <div class="model-name">{{ m.model }}</div>
+              <div
+                class="model-result {% if m.result == 'Safe' %}safe{% else %}malicious{% endif %}"
+              >
+                {{ m.result }}
+              </div>
+              <div class="model-confidence">{{ m.confidence }}% confidence</div>
+              <div class="confidence-bar">
+                <div
+                  class="confidence-fill"
+                  data-width="{{ m.confidence }}"
+                  style="width:0;background:{% if m.result == 'Safe' %}var(--primary-color){% else %}var(--accent-red){% endif %};"
+                ></div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Threat Indicators ── -->
+        {% if result.threat_indicators %}
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-exclamation-circle"></i> Threat Indicators
+          </h4>
+          <div class="threat-indicators">
+            {% for ind in result.threat_indicators %}
+            <div class="indicator-item {{ ind.severity }}">
+              <div class="indicator-icon {{ ind.severity }}">
+                <i class="{{ ind.icon }}"></i>
+              </div>
+              <div class="indicator-content">
+                <div class="indicator-name">{{ ind.name }}</div>
+                <div class="indicator-detail">{{ ind.description }}</div>
+              </div>
+              <span class="indicator-badge {{ ind.severity }}"
+                >{{ ind.severity|upper }}</span
+              >
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Domain Intelligence ── -->
+        {% if result.domain_info.age_days != None or result.domain_info.dns_ips %}
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-server"></i> Domain Intelligence
+          </h4>
+
+          {% if result.domain_info.age_days != None %}
+          <div class="domain-age-display">
+            <div class="domain-age-header">
+              <span class="age-text">
+                {% if result.domain_info.age_days < 30 %}
+                <i
+                  class="fas fa-exclamation-triangle"
+                  style="color: var(--accent-red)"
+                ></i>
+                {{ result.domain_info.age_days }} days old {% elif
+                result.domain_info.age_days < 365 %}
+                <i class="fas fa-clock" style="color: #ffc107"></i>
+                {{ result.domain_info.age_days }} days old {% else %}
+                <i
+                  class="fas fa-check-circle"
+                  style="color: var(--primary-color)"
+                ></i>
+                {{ result.domain_info.age_days }} days old {% endif %}
+              </span>
+              <span
+                class="quick-badge {% if result.domain_info.age_days < 30 %}danger{% elif result.domain_info.age_days < 365 %}warn{% else %}safe{% endif %}"
+              >
+                {% if result.domain_info.age_days >= 365 %}{{ result.domain_info.age_days|divisibleby:365 }}+ years{% else %}{{ result.domain_info.age_days }}d{% endif %}
+              </span>
+            </div>
+            {% if result.domain_info.creation_date %}
+            <div class="domain-age-meta">
+              <i class="fas fa-calendar-alt"></i> Registered {{ result.domain_info.creation_date }} {% if result.domain_info.registrar %} · {{ result.domain_info.registrar }}{% endif %}
+            </div>
+            {% endif %}
+            <div class="age-bar-wrap">
+              {% widthratio result.domain_info.age_days 3650 100 as age_pct %}
+              <div
+                class="age-bar-fill"
+                data-width="{% if age_pct > 100 %}100{% else %}{{ age_pct }}{% endif %}"
+                style="width:0;background:{% if result.domain_info.age_days < 30 %}var(--accent-red){% elif result.domain_info.age_days < 365 %}#ffc107{% else %}var(--primary-color){% endif %};"
+              ></div>
+            </div>
+          </div>
+          {% endif %} {% if result.domain_info.dns_ips %}
+          <div style="margin-top: 12px">
+            <div class="comp-scores-title">DNS Records</div>
+            <div class="dns-records">
+              {% for ip in result.domain_info.dns_ips %}
+              <span class="dns-ip">{{ ip }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- ── Risk Factors ── -->
+        {% if result.risk_factors %}
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-exclamation-triangle"></i> Risk Factors
+          </h4>
+          <ul class="risk-list">
+            {% for factor in result.risk_factors %}
+            <li class="risk-item">
+              <i class="fas fa-chevron-right"></i> {{ factor }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- ── Recommendation ── -->
+        {% if result.recommendation %}
+        <div class="section-card">
+          <h4 class="section-title">
+            <i class="fas fa-clipboard-check"></i> Recommendation
+          </h4>
+          <p
+            style="
+              color: var(--text-secondary);
+              font-size: 0.92rem;
+              line-height: 1.6;
+            "
+          >
+            {{ result.recommendation }}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+      <!-- result-body -->
+    </div>
+    <!-- result-card -->
+  </section>
+  {% endif %}
+
+  <!-- ═══ FEATURES ═══ -->
+  <section class="features-section">
+    <h2 class="section-heading">How It Works</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-filter"></i></div>
+        <h3>URL Normalization</h3>
+        <p>
+          Parses, decodes, and normalizes URLs for consistent analysis across
+          all pipeline steps.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-ban"></i></div>
+        <h3>Blocklist Engine</h3>
+        <p>
+          30+ URL shorteners and known-malicious pattern detection including
+          punycode &amp; data URIs.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Domain Trust</h3>
+        <p>
+          7-layer whitelist verification covering tech, government, CDN, and
+          educational domains.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-server"></i></div>
+        <h3>Domain Intel</h3>
+        <p>
+          WHOIS age analysis and DNS resolution checks to identify
+          newly-registered suspicious domains.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-code"></i></div>
+        <h3>Structure Analysis</h3>
+        <p>
+          Evaluates URL length, path depth, entropy, special characters, and
+          redirect patterns.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+        <h3>ML Ensemble</h3>
+        <p>
+          3-model ensemble (Decision Tree, Random Forest, Extra Trees) with
+          confidence-weighted voting.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{% static 'js/url-threat.js' %}"></script>
+{% endblock %}

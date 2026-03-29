@@ -1,0 +1,691 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Email Validation -
+CyberX Security Platform{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/services.css' %}" />
+<link rel="stylesheet" href="{% static 'css/emailvalidation.css' %}" />
+<style>
+  .format-hint {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.82rem;
+    padding: 4px 0;
+  }
+  .format-hint.valid   { color: var(--primary-color); }
+  .format-hint.invalid { color: var(--text-secondary); }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <!-- ===================== HERO ===================== -->
+  <section class="service-hero">
+    <h1 class="glitch" data-text="EMAIL VALIDATION">
+      EMAIL VALIDATION
+      <span class="version-badge">v3.0</span>
+    </h1>
+    <p class="hero-subtitle">
+      9-layer email validation with disposable-domain blocklist, WHOIS age
+      check, SPF / DKIM / DMARC authentication, weighted risk scoring, and
+      behavioral monitoring.
+    </p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-number">5,100+</span>
+        <span class="stat-label">Blocked Domains</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">9</span>
+        <span class="stat-label">Validation Layers</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">99.8%</span>
+        <span class="stat-label">Detection Rate</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">&lt;5s</span>
+        <span class="stat-label">Response</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FORM ===================== -->
+  <section class="validation-section">
+    <div class="service-form-card">
+      <div class="form-header">
+        <h2><i class="fas fa-shield-alt"></i> Email Security Validator</h2>
+        <p>
+          Enter an email address to perform a comprehensive 9-layer security
+          analysis
+        </p>
+      </div>
+
+      <form
+        method="post"
+        action="{% url 'emailvalidation:index' %}"
+        id="emailValidationForm"
+      >
+        {% csrf_token %}
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <i class="fas fa-envelope input-icon"></i>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="example@domain.com"
+            required
+            autocomplete="email"
+          />
+          <div class="format-hint" id="formatHint"></div>
+        </div>
+        <button type="submit" class="btn-service" id="submitBtn">
+          <i class="fas fa-search"></i>
+          <span>Validate Email</span>
+        </button>
+      </form>
+
+      <div class="loading-indicator" id="loadingIndicator">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Running 9-layer security analysis&hellip;</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ERROR ===================== -->
+  {% if error %}
+  <div class="error-banner">
+    <i class="fas fa-exclamation-triangle"></i>
+    <div class="error-text">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ===================== RESULTS ===================== -->
+  {% if result %}
+  <section class="results-section">
+    <div class="result-card">
+      <!-- ──── Result Header ──── -->
+      <div class="result-header {{ result.status_color }}">
+        <div class="result-icon {{ result.status_color }}">
+          <i class="{{ result.status_icon }}"></i>
+        </div>
+        <div class="result-title {{ result.status_color }}">
+          <h3>{{ result.title }}</h3>
+          <p>{{ result.explanation }}</p>
+        </div>
+        {% if result.processing_time_ms %}
+        <div class="processing-time">
+          <i class="fas fa-bolt"></i>
+          {{ result.processing_time_ms|floatformat:0 }}ms
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="result-body">
+        <!-- ──── DNS Warning ──── -->
+        {% if result.dns_warning %}
+        <div class="dns-warning-banner">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>{{ result.dns_warning }}</span>
+        </div>
+        {% endif %}
+
+        <!-- ──── Quick Details Grid ──── -->
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Email Address</div>
+            <div class="detail-value">{{ result.email }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Domain</div>
+            <div class="detail-value">{{ result.domain|default:"N/A" }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Valid Format</div>
+            <div class="detail-value">
+              {% if result.is_valid %}
+              <i class="fas fa-check-circle check"></i> Yes
+              {% else %}
+              <i class="fas fa-times-circle cross"></i> No
+              {% endif %}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Can Receive Mail</div>
+            <div class="detail-value">
+              {% if result.is_deliverable %}
+              <i class="fas fa-check-circle check"></i> Yes
+              {% else %}
+              <i class="fas fa-times-circle cross"></i> No
+              {% endif %}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Temporary Email</div>
+            <div class="detail-value">
+              {% if result.is_temporary %}
+              <i class="fas fa-exclamation-triangle warn"></i> Yes
+              {% else %}
+              <i class="fas fa-check-circle check"></i> No
+              {% endif %}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Confidence</div>
+            <div class="detail-value" style="gap: 12px;">
+              <div class="confidence-ring">
+                <svg viewBox="0 0 44 44">
+                  <circle class="ring-bg" cx="22" cy="22" r="20" />
+                  <circle class="ring-fill" cx="22" cy="22" r="20"
+                    data-percent="{{ result.confidence_score|default:'0' }}"
+                    stroke="{% if result.confidence_score >= 70 %}var(--primary-color){% elif result.confidence_score >= 40 %}#ffc107{% else %}var(--accent-red){% endif %}"
+                    style="stroke-dasharray: 125.66; stroke-dashoffset: 125.66;"
+                  />
+                </svg>
+                <span class="ring-value">{{ result.confidence_score|floatformat:0 }}</span>
+              </div>
+              <span>{{ result.confidence_score|floatformat:0 }}%</span>
+            </div>
+          </div>
+        </div>
+
+        {% if result.normalized_email and result.normalized_email != result.email %}
+        <div style="margin-bottom: 20px; font-size: 0.88rem; color: var(--text-secondary);">
+          <i class="fas fa-arrow-right" style="color: var(--accent-blue); margin-right: 6px;"></i>
+          Normalized: <span class="normalized-email">{{ result.normalized_email }}</span>
+        </div>
+        {% endif %}
+
+        <!-- ──── Risk Assessment Gauge ──── -->
+        {% if result.risk_score is not None %}
+        <div class="section-card"
+          style="border: 1px solid
+          {% if result.risk_level == 'critical' %}rgba(255,71,87,0.35)
+          {% elif result.risk_level == 'high' %}rgba(255,107,53,0.35)
+          {% elif result.risk_level == 'medium' %}rgba(255,193,7,0.3)
+          {% else %}rgba(0,255,136,0.25){% endif %}">
+          <div class="section-header">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Risk Assessment</span>
+          </div>
+
+          <div class="risk-gauge-container">
+            <div class="risk-gauge">
+              <svg viewBox="0 0 200 110">
+                <path class="risk-gauge-bg" d="M 16 100 A 84 84 0 0 1 184 100" />
+                <path class="risk-gauge-fill" id="riskArc"
+                  d="M 16 100 A 84 84 0 0 1 184 100"
+                  data-risk-score="{{ result.risk_score|default:'0' }}"
+                  stroke="{% if result.risk_level == 'critical' %}#ff4757{% elif result.risk_level == 'high' %}#ff6b35{% elif result.risk_level == 'medium' %}#ffc107{% else %}#00ff88{% endif %}"
+                  style="stroke-dasharray: 264; stroke-dashoffset: 264;"
+                />
+              </svg>
+              <div class="risk-gauge-value"
+                data-score="{{ result.risk_score|floatformat:0 }}"
+                style="color:{% if result.risk_level == 'critical' %}#ff4757{% elif result.risk_level == 'high' %}#ff6b35{% elif result.risk_level == 'medium' %}#ffc107{% else %}#00ff88{% endif %}">
+                0
+              </div>
+            </div>
+            <div class="risk-gauge-scale">
+              <span>0</span>
+              <span>50</span>
+              <span>100</span>
+            </div>
+            <div class="risk-gauge-label"
+              style="color:{% if result.risk_level == 'critical' %}#ff4757{% elif result.risk_level == 'high' %}#ff6b35{% elif result.risk_level == 'medium' %}#ffc107{% else %}#00ff88{% endif %}">
+              {{ result.risk_level|upper }} RISK
+            </div>
+          </div>
+
+          <!-- Component score bars -->
+          {% if result.risk_details.component_scores %}
+          <div class="comp-scores">
+            <div class="comp-scores-title">Component Breakdown</div>
+            {% for comp, score in result.risk_details.component_scores.items %}
+            <div class="comp-row">
+              <span class="comp-label">{{ comp }}</span>
+              <div class="comp-bar-wrap">
+                <div class="comp-bar-fill" data-width="{{ score }}"
+                  style="width:0%; background:{% if score >= 70 %}#ff4757{% elif score >= 40 %}#ffc107{% else %}#00ff88{% endif %};"></div>
+              </div>
+              <span class="comp-value"
+                style="color:{% if score >= 70 %}#ff4757{% elif score >= 40 %}#ffc107{% else %}#00ff88{% endif %}">{{ score }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- Contributing factors -->
+          {% if result.risk_details.contributing_factors %}
+          <div class="contributing-factors">
+            <div class="comp-scores-title">Top Risk Contributors</div>
+            {% for f in result.risk_details.contributing_factors %}
+            <div class="factor-row">
+              <span class="factor-name">{{ f.factor }}</span>
+              <span class="factor-weight">{{ f.weight }}</span>
+              <div class="comp-bar-wrap" style="flex: 1;">
+                <div class="comp-bar-fill" data-width="{{ f.score }}"
+                  style="width:0%; background:{% if f.score >= 70 %}#ff4757{% elif f.score >= 40 %}#ffc107{% else %}#00ff88{% endif %};"></div>
+              </div>
+              <span class="factor-score"
+                style="color:{% if f.score >= 70 %}#ff4757{% elif f.score >= 40 %}#ffc107{% else %}#00ff88{% endif %}">{{ f.score }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- ──── 9-Layer Validation Steps ──── -->
+        {% if result.validation_steps %}
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-tasks"></i>
+            <span>9-Layer Validation Pipeline</span>
+          </div>
+          <div class="validation-steps">
+
+            {# Layer 1: Format #}
+            {% if result.validation_steps.format %}
+            <div class="step-item {% if result.validation_steps.format.status == 'valid' %}passed{% else %}failed{% endif %}">
+              <div class="step-number">1</div>
+              <div class="step-icon {% if result.validation_steps.format.status == 'valid' %}passed{% else %}failed{% endif %}">
+                <i class="fas {% if result.validation_steps.format.status == 'valid' %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Format Validation</div>
+                <div class="step-detail">{{ result.validation_steps.format.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.format.status == 'valid' %}PASS{% else %}FAIL{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 2: Library #}
+            {% if result.validation_steps.library %}
+            <div class="step-item {% if result.validation_steps.library.status == 'valid' %}passed{% else %}failed{% endif %}">
+              <div class="step-number">2</div>
+              <div class="step-icon {% if result.validation_steps.library.status == 'valid' %}passed{% else %}failed{% endif %}">
+                <i class="fas {% if result.validation_steps.library.status == 'valid' %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">RFC Compliance</div>
+                <div class="step-detail">{{ result.validation_steps.library.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.library.status == 'valid' %}PASS{% else %}FAIL{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 3: Blacklist #}
+            {% if result.validation_steps.blacklist %}
+            <div class="step-item {% if result.validation_steps.blacklist.is_blacklisted %}failed{% else %}passed{% endif %}">
+              <div class="step-number">3</div>
+              <div class="step-icon {% if result.validation_steps.blacklist.is_blacklisted %}failed{% else %}passed{% endif %}">
+                <i class="fas {% if result.validation_steps.blacklist.is_blacklisted %}fa-ban{% else %}fa-check{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Blocklist Check (5,100+ domains)</div>
+                <div class="step-detail">{{ result.validation_steps.blacklist.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.blacklist.is_blacklisted %}BLOCKED{% else %}CLEAR{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 4: Heuristics #}
+            {% if result.validation_steps.heuristics %}
+            <div class="step-item {% if result.validation_steps.heuristics.is_temporary %}warning{% else %}passed{% endif %}">
+              <div class="step-number">4</div>
+              <div class="step-icon {% if result.validation_steps.heuristics.is_temporary %}warning{% else %}passed{% endif %}">
+                <i class="fas {% if result.validation_steps.heuristics.is_temporary %}fa-exclamation{% else %}fa-check{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Temp Email Heuristics</div>
+                <div class="step-detail">{{ result.validation_steps.heuristics.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.heuristics.is_temporary %}FLAG{% else %}CLEAR{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 5: Domain Age #}
+            {% if result.validation_steps.domain_age %}
+            {% with da=result.validation_steps.domain_age %}
+            <div class="step-item {% if da.risk_level == 'safe' or da.risk_level == 'low' %}passed{% elif da.risk_level == 'high' %}failed{% else %}warning{% endif %}">
+              <div class="step-number">5</div>
+              <div class="step-icon {% if da.risk_level == 'safe' or da.risk_level == 'low' %}passed{% elif da.risk_level == 'high' %}failed{% else %}warning{% endif %}">
+                <i class="fas {% if da.risk_level == 'safe' or da.risk_level == 'low' %}fa-check{% elif da.risk_level == 'high' %}fa-times{% else %}fa-question{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">Domain Age (WHOIS)</div>
+                <div class="step-detail">{{ da.message }}</div>
+              </div>
+              <span class="step-badge">{{ da.risk_level|upper }}</span>
+            </div>
+            {% endwith %}
+            {% endif %}
+
+            {# Layer 6: SPF #}
+            {% if result.validation_steps.spf %}
+            <div class="step-item {% if result.validation_steps.spf.found %}passed{% else %}failed{% endif %}">
+              <div class="step-number">6</div>
+              <div class="step-icon {% if result.validation_steps.spf.found %}passed{% else %}failed{% endif %}">
+                <i class="fas {% if result.validation_steps.spf.found %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">SPF Record</div>
+                <div class="step-detail">{{ result.validation_steps.spf.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.spf.found %}FOUND{% else %}MISSING{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 7: DKIM #}
+            {% if result.validation_steps.dkim %}
+            <div class="step-item {% if result.validation_steps.dkim.found %}passed{% else %}failed{% endif %}">
+              <div class="step-number">7</div>
+              <div class="step-icon {% if result.validation_steps.dkim.found %}passed{% else %}failed{% endif %}">
+                <i class="fas {% if result.validation_steps.dkim.found %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">DKIM Signature</div>
+                <div class="step-detail">{{ result.validation_steps.dkim.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.dkim.found %}FOUND{% else %}MISSING{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 8: DMARC #}
+            {% if result.validation_steps.dmarc %}
+            <div class="step-item {% if result.validation_steps.dmarc.found %}passed{% else %}failed{% endif %}">
+              <div class="step-number">8</div>
+              <div class="step-icon {% if result.validation_steps.dmarc.found %}passed{% else %}failed{% endif %}">
+                <i class="fas {% if result.validation_steps.dmarc.found %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">DMARC Policy</div>
+                <div class="step-detail">{{ result.validation_steps.dmarc.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.dmarc.found %}FOUND{% else %}MISSING{% endif %}</span>
+            </div>
+            {% endif %}
+
+            {# Layer 9: MX / DNS #}
+            {% if result.validation_steps.dns %}
+            <div class="step-item {% if result.validation_steps.dns.has_mx %}passed{% elif result.validation_steps.dns.has_mx == False %}failed{% else %}warning{% endif %}">
+              <div class="step-number">9</div>
+              <div class="step-icon {% if result.validation_steps.dns.has_mx %}passed{% elif result.validation_steps.dns.has_mx == False %}failed{% else %}warning{% endif %}">
+                <i class="fas {% if result.validation_steps.dns.has_mx %}fa-check{% elif result.validation_steps.dns.has_mx == False %}fa-times{% else %}fa-question{% endif %}"></i>
+              </div>
+              <div class="step-content">
+                <div class="step-name">MX / DNS Deliverability</div>
+                <div class="step-detail">{{ result.validation_steps.dns.message }}</div>
+              </div>
+              <span class="step-badge">{% if result.validation_steps.dns.has_mx %}OK{% elif result.validation_steps.dns.has_mx == False %}FAIL{% else %}WARN{% endif %}</span>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ──── Email Authentication (SPF / DKIM / DMARC) ──── -->
+        {% if result.spf_check or result.dkim_check or result.dmarc_check %}
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-lock"></i>
+            <span>Email Authentication</span>
+          </div>
+          <div class="auth-checks">
+            {% if result.spf_check %}
+            <div class="auth-row {% if result.spf_check.found %}found{% else %}missing{% endif %}">
+              <div class="auth-icon {% if result.spf_check.found %}found{% else %}missing{% endif %}">
+                <i class="fas {% if result.spf_check.found %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="auth-content">
+                <div class="auth-name">SPF (Sender Policy Framework)</div>
+                <div class="auth-detail">
+                  {{ result.spf_check.message }}
+                  {% if result.spf_check.record %}
+                  <br /><code>{{ result.spf_check.record }}</code>
+                  {% endif %}
+                </div>
+              </div>
+              <span class="auth-badge {% if result.spf_check.found %}found{% else %}missing{% endif %}">
+                {% if result.spf_check.found %}{{ result.spf_check.strictness|default:"found" }}{% else %}missing{% endif %}
+              </span>
+            </div>
+            {% endif %}
+
+            {% if result.dkim_check %}
+            <div class="auth-row {% if result.dkim_check.found %}found{% else %}missing{% endif %}">
+              <div class="auth-icon {% if result.dkim_check.found %}found{% else %}missing{% endif %}">
+                <i class="fas {% if result.dkim_check.found %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="auth-content">
+                <div class="auth-name">DKIM (DomainKeys Identified Mail)</div>
+                <div class="auth-detail">{{ result.dkim_check.message }}</div>
+              </div>
+              <span class="auth-badge {% if result.dkim_check.found %}found{% else %}missing{% endif %}">
+                {% if result.dkim_check.found %}found{% else %}missing{% endif %}
+              </span>
+            </div>
+            {% endif %}
+
+            {% if result.dmarc_check %}
+            <div class="auth-row {% if result.dmarc_check.found %}found{% else %}missing{% endif %}">
+              <div class="auth-icon {% if result.dmarc_check.found %}found{% else %}missing{% endif %}">
+                <i class="fas {% if result.dmarc_check.found %}fa-check{% else %}fa-times{% endif %}"></i>
+              </div>
+              <div class="auth-content">
+                <div class="auth-name">DMARC (Domain-based Message Authentication)</div>
+                <div class="auth-detail">
+                  {{ result.dmarc_check.message }}
+                  {% if result.dmarc_check.record %}
+                  <br /><code>{{ result.dmarc_check.record }}</code>
+                  {% endif %}
+                </div>
+              </div>
+              <span class="auth-badge {% if result.dmarc_check.found %}found{% else %}missing{% endif %}">
+                {% if result.dmarc_check.found %}p={{ result.dmarc_check.policy }}{% else %}missing{% endif %}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ──── Domain Age ──── -->
+        {% if result.domain_age_info.age_days is not None %}
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Domain Age</span>
+          </div>
+          <div class="domain-age-display">
+            <div class="domain-age-header">
+              <span class="age-text">{{ result.domain_age_info.message }}</span>
+              <span class="auth-badge {% if result.domain_age_info.risk_level == 'safe' or result.domain_age_info.risk_level == 'low' %}found{% else %}missing{% endif %}">
+                {{ result.domain_age_info.risk_level }}
+              </span>
+            </div>
+            {% if result.domain_age_info.creation_date %}
+            <div class="domain-age-meta">
+              <i class="fas fa-clock"></i>
+              Registered: {{ result.domain_age_info.creation_date }}
+              {% if result.domain_age_info.registrar %}
+              &middot; {{ result.domain_age_info.registrar }}
+              {% endif %}
+              {% if result.domain_age_info.source == 'cache' %}
+              <span class="quick-badge info" style="margin-left: 6px; font-size: 0.7rem;">
+                <i class="fas fa-database"></i> cached
+              </span>
+              {% endif %}
+            </div>
+            {% endif %}
+            <div class="age-bar-wrap">
+              {% with age=result.domain_age_info.age_days %}
+              <div class="age-bar-fill"
+                style="width: {% if age > 3650 %}100{% elif age > 0 %}{% widthratio age 3650 100 %}{% else %}1{% endif %}%;
+                       max-width: 100%;
+                       background: {% if age < 30 %}#ff4757{% elif age < 90 %}#ff6b35{% elif age < 365 %}#ffc107{% else %}#00ff88{% endif %};"></div>
+              {% endwith %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ──── MX Records ──── -->
+        {% if result.domain_info.mx_records %}
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-server"></i>
+            <span>Mail Servers (MX Records)</span>
+          </div>
+          <div class="mx-list">
+            {% for mx in result.domain_info.mx_records %}
+            <div class="mx-item">
+              <span class="mx-priority">Priority {{ mx.priority }}</span>
+              <span class="mx-server">{{ mx.exchange }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ──── Behavioral Monitoring ──── -->
+        {% if result.behavioral_info %}
+        <div class="section-card">
+          <div class="section-header">
+            <i class="fas fa-user-secret"></i>
+            <span>Behavioral Monitoring</span>
+          </div>
+
+          <div class="behavioral-stats">
+            <div class="behavioral-stat">
+              <i class="fas fa-hashtag"></i>
+              Queries this session:
+              <strong>{{ result.behavioral_info.queries_this_session }}</strong>
+            </div>
+            {% if result.behavioral_info.domain_query_count %}
+            <div class="behavioral-stat">
+              <i class="fas fa-globe"></i>
+              Domain total queries:
+              <strong>{{ result.behavioral_info.domain_query_count }}</strong>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if result.behavioral_info.is_rate_limited %}
+          <div class="behavior-flag rate-limited">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span style="color: var(--accent-red); font-weight: 600;">Rate limit exceeded &mdash; please slow down</span>
+          </div>
+          {% endif %}
+
+          {% if result.behavioral_info.behavioral_flags %}
+          <div class="behavior-flags">
+            {% for flag in result.behavioral_info.behavioral_flags %}
+            <div class="behavior-flag">
+              <i class="fas fa-flag"></i>
+              <span style="color: var(--text-secondary); font-size: 0.88rem;">{{ flag }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- ──── Risk Factors ──── -->
+        {% if result.risk_factors %}
+        <div class="section-card" style="border: 1px solid rgba(255, 193, 7, 0.25);">
+          <div class="section-header" style="color: #ffc107;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Risk Factors ({{ result.risk_factors|length }})</span>
+          </div>
+          <ul class="risk-list">
+            {% for factor in result.risk_factors %}
+            <li class="risk-item">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>{{ factor }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- ──── Recommendation ──── -->
+        {% if result.recommendation %}
+        <div class="section-card" style="border: 1px solid rgba(0, 212, 255, 0.25);">
+          <div class="section-header" style="color: var(--accent-blue);">
+            <i class="fas fa-lightbulb"></i>
+            <span>Recommendation</span>
+          </div>
+          <p style="color: var(--text-secondary); line-height: 1.65; font-size: 0.93rem;">
+            {{ result.recommendation }}
+          </p>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="service-features-section">
+    <div class="container">
+      <h2 class="section-title">Email Security Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>9-Layer Validation</h3>
+          <p>
+            Format, library, blocklist, heuristics, domain age, SPF, DKIM,
+            DMARC, and MX record checks.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-ban"></i></div>
+          <h3>5,100+ Domain Blocklist</h3>
+          <p>
+            Community-maintained disposable email blocklist updated from GitHub
+            for near-100% temp-mail detection.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+          <h3>Domain Age Check</h3>
+          <p>
+            WHOIS lookup with 7-day caching to flag newly registered domains
+            that are often used for fraud.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-lock"></i></div>
+          <h3>SPF / DKIM / DMARC</h3>
+          <p>
+            DNS-based authentication verification to confirm the domain has
+            proper anti-spoofing policies.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <h3>Weighted Risk Scoring</h3>
+          <p>
+            Composite 0&ndash;100 risk score with per-component breakdown to
+            quantify email trustworthiness.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-user-secret"></i></div>
+          <h3>Behavioral Monitoring</h3>
+          <p>
+            Rate limiting, bulk-temp-check detection, and domain-abuse pattern
+            flags per IP address.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{% static 'js/email-validation.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,617 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Phishing Detection
+- CyberX Security Platform{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/services.css' %}" />
+<style>
+  /* ===== PHISHING DETECTION — PAGE-SPECIFIC STYLES ===== */
+
+  /* Accent override: red theme for phishing */
+  .version-badge {
+    background: linear-gradient(45deg, var(--accent-red), #ff6b6b);
+    color: white;
+  }
+
+  .btn-service {
+    background: linear-gradient(45deg, var(--accent-red), #ff6b6b);
+    color: white;
+  }
+
+  .btn-service:hover {
+    box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
+  }
+
+  .loading-spinner {
+    border-color: rgba(255, 71, 87, 0.1);
+    border-top-color: var(--accent-red);
+  }
+
+  /* Score Display */
+  .score-display {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+
+  .score-circle {
+    text-align: center;
+  }
+
+  .score-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    position: relative;
+  }
+
+  .score-ring.confidence {
+    background: conic-gradient(
+      var(--primary-color) calc(var(--score) * 3.6deg),
+      rgba(0, 255, 136, 0.1) 0deg
+    );
+  }
+
+  .score-ring.risk {
+    background: conic-gradient(
+      var(--accent-red) calc(var(--score) * 3.6deg),
+      rgba(255, 71, 87, 0.1) 0deg
+    );
+  }
+
+  .score-ring-inner {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--dark-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-value {
+    font-family: "Orbitron", monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  .score-ring.confidence .score-value {
+    color: var(--primary-color);
+  }
+
+  .score-ring.risk .score-value {
+    color: var(--accent-red);
+  }
+
+  .score-unit {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  .score-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  /* (detail grid & section card styles from services.css) */
+
+  /* Risk Factors */
+  .risk-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .risk-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    border-left: 4px solid;
+  }
+
+  .risk-item.high {
+    border-left-color: var(--accent-red);
+    background: rgba(255, 71, 87, 0.1);
+  }
+
+  .risk-item.medium {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+  }
+
+  .risk-item.low {
+    border-left-color: var(--accent-blue);
+    background: rgba(0, 212, 255, 0.1);
+  }
+
+  .risk-severity {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .risk-severity.high {
+    background: rgba(255, 71, 87, 0.3);
+    color: var(--accent-red);
+  }
+
+  .risk-severity.medium {
+    background: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+  }
+
+  .risk-severity.low {
+    background: rgba(0, 212, 255, 0.3);
+    color: var(--accent-blue);
+  }
+
+  .risk-message {
+    flex: 1;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  /* Security Indicators */
+  .security-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .security-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 20px;
+  }
+
+  .security-item i {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+  }
+
+  .security-item span {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+  }
+
+  /* URL Display */
+  .url-display {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .url-display-label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .url-display-value {
+    font-family: "Courier New", monospace;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    word-break: break-all;
+  }
+
+  /* Recommendation Box */
+  .recommendation-box {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 212, 255, 0.1),
+      rgba(0, 255, 136, 0.05)
+    );
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .recommendation-box .section-header {
+    color: var(--accent-blue);
+  }
+
+  .recommendation-box p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* Feature icon color override — red accent */
+  .feature-icon {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 71, 87, 0.1),
+      rgba(255, 152, 0, 0.1)
+    );
+  }
+
+  .feature-icon i {
+    color: var(--accent-red);
+  }
+
+  /* Error Display */
+  .error-card {
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    max-width: 600px;
+    margin: 40px auto;
+  }
+
+  .error-card i {
+    font-size: 3rem;
+    color: var(--accent-red);
+    margin-bottom: 15px;
+  }
+
+  .error-card h3 {
+    color: var(--accent-red);
+    font-family: "Orbitron", monospace;
+    margin-bottom: 10px;
+  }
+
+  .error-card p {
+    color: var(--text-secondary);
+  }
+
+  /* Model Status Badge */
+  .model-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 10px;
+  }
+
+  .model-status.active {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--primary-color);
+  }
+
+  .model-status.fallback {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <!-- Hero Section -->
+  <section class="service-hero">
+    <h1 class="glitch" data-text="PHISHING DETECTION">
+      PHISHING DETECTION
+      <span class="version-badge">AI-Powered</span>
+    </h1>
+    <p class="hero-subtitle">
+      Advanced real-time phishing URL detection powered by deep learning neural
+      networks. Analyzes 87+ security features to protect you from malicious
+      websites.
+    </p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-number">87+</span>
+        <span class="stat-label">Features Analyzed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">98%</span>
+        <span class="stat-label">Detection Rate</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">11K+</span>
+        <span class="stat-label">URLs Trained</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">&lt;3s</span>
+        <span class="stat-label">Analysis Time</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detection Form -->
+  <section class="detection-section">
+    <div class="service-form-card">
+      <div class="form-header">
+        <h2><i class="fas fa-fish"></i> URL Phishing Scanner</h2>
+        <p>Enter a suspicious URL to analyze for phishing indicators</p>
+      </div>
+
+      <form
+        method="post"
+        action="{% url 'phishingdetection:index' %}"
+        id="phishingDetectionForm"
+      >
+        {% csrf_token %}
+        <div class="input-group">
+          <label for="url">URL to Analyze</label>
+          <i class="fas fa-link input-icon"></i>
+          <input
+            type="text"
+            id="url"
+            name="url"
+            placeholder="https://example.com or suspicious-site.com"
+            required
+            autocomplete="url"
+          />
+        </div>
+
+        <button type="submit" class="btn-service" id="submitBtn">
+          <i class="fas fa-search-plus"></i>
+          <span>Analyze URL</span>
+        </button>
+      </form>
+
+      <div class="loading-indicator" id="loadingIndicator">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Scanning URL for phishing indicators...</p>
+        <p class="loading-text" style="font-size: 0.8rem; margin-top: 10px">
+          Extracting features • Running AI model • Analyzing risk factors
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  {% if result %} {% if result.error %}
+  <!-- Error Display -->
+  <section class="results-section">
+    <div class="error-card">
+      <i class="fas fa-exclamation-circle"></i>
+      <h3>Analysis Failed</h3>
+      <p>{{ result.error_message }}</p>
+      <p style="margin-top: 10px"><strong>URL:</strong> {{ result.url }}</p>
+    </div>
+  </section>
+  {% else %}
+  <section class="results-section">
+    <div class="result-card">
+      <!-- Result Header -->
+      <div class="result-header {{ result.status_color }}">
+        <div class="result-icon {{ result.status_color }}">
+          <i class="{{ result.status_icon }}"></i>
+        </div>
+        <div class="result-title {{ result.status_color }}">
+          <h3>
+            {{ result.title }} {% if result.model_used %}
+            <span class="model-status active"
+              ><i class="fas fa-brain"></i> AI Model</span
+            >
+            {% else %}
+            <span class="model-status fallback"
+              ><i class="fas fa-cog"></i> Heuristic</span
+            >
+            {% endif %}
+          </h3>
+          <p>{{ result.explanation }}</p>
+        </div>
+        {% if result.processing_time_ms %}
+        <div class="processing-time">
+          <i class="fas fa-bolt"></i> {{ result.processing_time_ms|floatformat:0
+          }}ms
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Result Body -->
+      <div class="result-body">
+        <!-- URL Display -->
+        <div class="url-display">
+          <div class="url-display-label">Analyzed URL</div>
+          <div class="url-display-value">{{ result.normalized_url }}</div>
+        </div>
+
+        <!-- Score Display -->
+        <div class="score-display">
+          <div class="score-circle">
+            <div
+              class="score-ring confidence"
+              style="--score: {{ result.confidence }}"
+            >
+              <div class="score-ring-inner">
+                <span class="score-value"
+                  >{{ result.confidence|floatformat:0 }}</span
+                >
+                <span class="score-unit">%</span>
+              </div>
+            </div>
+            <div class="score-label">Confidence</div>
+          </div>
+          <div class="score-circle">
+            <div
+              class="score-ring risk"
+              style="--score: {{ result.risk_score }}"
+            >
+              <div class="score-ring-inner">
+                <span class="score-value">{{ result.risk_score }}</span>
+                <span class="score-unit">/100</span>
+              </div>
+            </div>
+            <div class="score-label">Risk Score</div>
+          </div>
+        </div>
+
+        <!-- Quick Details -->
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Domain</div>
+            <div class="detail-value">{{ result.domain }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Protocol</div>
+            <div class="detail-value">
+              {% if result.features.uses_https %}
+              <i class="fas fa-lock check"></i> {{ result.scheme }} {% else %}
+              <i class="fas fa-unlock cross"></i> {{ result.scheme }} {% endif
+              %}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">URL Length</div>
+            <div class="detail-value">
+              {{ result.features.url_length }} chars
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Subdomains</div>
+            <div class="detail-value">{{ result.features.num_subdomains }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Uses IP Address</div>
+            <div class="detail-value">
+              {% if result.features.uses_ip %}
+              <i class="fas fa-times-circle cross"></i> Yes {% else %}
+              <i class="fas fa-check-circle check"></i> No {% endif %}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Shortening Service</div>
+            <div class="detail-value">
+              {% if result.features.is_shortening_service %}
+              <i class="fas fa-exclamation-triangle warn"></i> Yes {% else %}
+              <i class="fas fa-check-circle check"></i> No {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Indicators -->
+        {% if result.security_indicators %}
+        <div
+          class="section-card"
+          style="border: 1px solid rgba(0, 255, 136, 0.3)"
+        >
+          <div class="section-header" style="color: var(--primary-color)">
+            <i class="fas fa-shield-alt"></i>
+            <span>Security Indicators</span>
+          </div>
+          <div class="security-list">
+            {% for indicator in result.security_indicators %}
+            <div class="security-item">
+              <i class="fas fa-check"></i>
+              <span>{{ indicator }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Risk Factors -->
+        {% if result.risk_factors %}
+        <div
+          class="section-card"
+          style="border: 1px solid rgba(255, 71, 87, 0.3)"
+        >
+          <div class="section-header" style="color: var(--accent-red)">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span
+              >Risk Factors Detected ({{ result.risk_factors|length }})</span
+            >
+          </div>
+          <div class="risk-list">
+            {% for factor in result.risk_factors %}
+            <div class="risk-item {{ factor.severity }}">
+              <span class="risk-severity {{ factor.severity }}"
+                >{{ factor.severity }}</span
+              >
+              <span class="risk-message">{{ factor.message }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Recommendation -->
+        {% if result.recommendation %}
+        <div class="recommendation-box">
+          <div class="section-header">
+            <i class="fas fa-lightbulb"></i>
+            <span>Recommendation</span>
+          </div>
+          <p>{{ result.recommendation }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% endif %} {% endif %}
+
+  <!-- Features Section -->
+  <section class="service-features-section">
+    <div class="container">
+      <h2 class="section-title">Detection Capabilities</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-brain"></i>
+          </div>
+          <h3>Neural Network</h3>
+          <p>
+            Deep learning model trained on 11,000+ URLs for accurate detection.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-fingerprint"></i>
+          </div>
+          <h3>87+ Features</h3>
+          <p>
+            Comprehensive URL, content, and domain analysis for thorough
+            scanning.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-tachometer-alt"></i>
+          </div>
+          <h3>Real-Time</h3>
+          <p>Instant analysis with live HTML fetching and WHOIS lookup.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-shield-virus"></i>
+          </div>
+          <h3>Brand Detection</h3>
+          <p>Identifies brand impersonation and lookalike domains.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endif %} {%endblock %} {% block extra_js %}
+<script>
+  document
+    .getElementById("phishingDetectionForm")
+    .addEventListener("submit", function (e) {
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const submitBtn = document.getElementById("submitBtn");
+
+      loadingIndicator.style.display = "block";
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> <span>Analyzing...</span>';
+    });
+</script>
+{% endblock %}

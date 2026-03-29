@@ -1,0 +1,1651 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Network Intrusion
+Detection - CyberX Security Platform{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/services.css' %}" />
+<style>
+  /* ===== NETWORK IDS — PAGE-SPECIFIC STYLES ===== */
+  :root {
+    --nids-accent: #00d4ff;
+    --nids-accent-dim: rgba(0, 212, 255, 0.15);
+    --nids-accent-border: rgba(0, 212, 255, 0.3);
+    --nids-red: #ff4757;
+    --nids-orange: #ff9f43;
+    --nids-yellow: #ffd32a;
+    --nids-green: #0be881;
+  }
+
+  /* Accent override: cyan theme */
+  .service-hero .glitch {
+    color: var(--nids-accent);
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+  }
+
+  .version-badge {
+    background: linear-gradient(45deg, var(--nids-accent), #0099cc);
+    color: #0a0a1a;
+  }
+
+  .stat-number {
+    color: var(--nids-accent);
+  }
+
+  /* Mode Toggle */
+  .mode-section {
+    padding: 30px 0 0;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .mode-btn {
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: 2px solid var(--nids-accent-border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Inter", sans-serif;
+  }
+  .mode-btn.active {
+    background: var(--nids-accent-dim);
+    border-color: var(--nids-accent);
+    color: var(--nids-accent);
+  }
+  .mode-btn:hover {
+    border-color: var(--nids-accent);
+    color: var(--nids-accent);
+  }
+  .mode-panel {
+    display: none;
+  }
+  .mode-panel.active {
+    display: block;
+  }
+
+  /* Analysis Card */
+  .analysis-card {
+    max-width: 680px;
+    margin: 0 auto;
+    background: rgba(26, 26, 46, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--nids-accent-border);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+  .form-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .form-header h2 {
+    font-family: "Orbitron", monospace;
+    color: var(--nids-accent);
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+  .form-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  /* File Upload */
+  .file-upload-area {
+    border: 2px dashed var(--nids-accent-border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(0, 212, 255, 0.03);
+    margin-bottom: 20px;
+  }
+  .file-upload-area:hover,
+  .file-upload-area.dragover {
+    border-color: var(--nids-accent);
+    background: var(--nids-accent-dim);
+  }
+  .upload-icon {
+    font-size: 3rem;
+    color: var(--nids-accent);
+    margin-bottom: 15px;
+  }
+  .upload-text {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  .upload-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.83rem;
+  }
+  .file-input {
+    display: none;
+  }
+  .selected-file {
+    display: none;
+    background: var(--nids-accent-dim);
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    border: 1px solid var(--nids-accent-border);
+  }
+  .selected-file.show {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .file-icon {
+    font-size: 2rem;
+    color: var(--nids-accent);
+  }
+  .file-details {
+    flex: 1;
+  }
+  .file-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 3px;
+    font-size: 0.9rem;
+  }
+  .file-size {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+  }
+  .remove-file {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+    transition: color 0.3s;
+  }
+  .remove-file:hover {
+    color: var(--nids-red);
+  }
+
+  /* Live Capture Form */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-label {
+    display: block;
+    color: var(--nids-accent);
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--nids-accent-border);
+    background: rgba(15, 15, 35, 0.8);
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+  }
+  .form-control:focus {
+    border-color: var(--nids-accent);
+  }
+  .form-control option {
+    background: #1a1a2e;
+  }
+  .duration-display {
+    color: var(--nids-accent);
+    font-weight: 700;
+    font-family: "Orbitron", monospace;
+  }
+  .range-slider {
+    width: 100%;
+    accent-color: var(--nids-accent);
+    cursor: pointer;
+  }
+  .form-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+    margin-top: 5px;
+  }
+
+  /* Buttons */
+  .btn-analyze {
+    width: 100%;
+    padding: 16px;
+    margin-top: 8px;
+    background: linear-gradient(45deg, var(--nids-accent), #0099cc);
+    color: #0a0a1a;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .btn-analyze:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+  }
+  .btn-analyze:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-stop {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--nids-red);
+    border: 1px solid rgba(255, 71, 87, 0.4);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: none;
+  }
+  .btn-stop.show {
+    display: block;
+  }
+  .btn-stop:hover {
+    background: rgba(255, 71, 87, 0.25);
+  }
+
+  /* Progress Panel */
+  .progress-panel {
+    display: none;
+    margin-top: 28px;
+  }
+  .progress-panel.active {
+    display: block;
+  }
+  .progress-card {
+    background: rgba(15, 15, 35, 0.8);
+    border: 1px solid var(--nids-accent-border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .progress-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .progress-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(0, 212, 255, 0.15);
+    border-top: 3px solid var(--nids-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .progress-text {
+    color: var(--nids-accent);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .progress-bar-wrap {
+    background: rgba(0, 212, 255, 0.08);
+    border-radius: 8px;
+    height: 6px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--nids-accent), #0099cc);
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* Live Stats */
+  .live-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 640px) {
+    .live-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .stat-box {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid var(--nids-accent-border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-box .val {
+    font-family: "Orbitron", monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--nids-accent);
+  }
+  .stat-box.danger .val {
+    color: var(--nids-red);
+  }
+  .stat-box.warn .val {
+    color: var(--nids-orange);
+  }
+  .stat-box.ok .val {
+    color: var(--nids-green);
+  }
+  .stat-box .lbl {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Results Preview Table */
+  .results-section {
+    margin-top: 28px;
+  }
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .results-title {
+    color: var(--nids-accent);
+    font-family: "Orbitron", monospace;
+    font-size: 1rem;
+  }
+  .results-count {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--nids-accent-border);
+  }
+  table.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+  table.results-table th {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--nids-accent);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  table.results-table td {
+    padding: 10px 16px;
+    color: var(--text-primary);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    white-space: nowrap;
+  }
+  table.results-table tr:hover td {
+    background: rgba(0, 212, 255, 0.04);
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .badge-green {
+    background: rgba(11, 232, 129, 0.15);
+    color: var(--nids-green);
+    border: 1px solid rgba(11, 232, 129, 0.3);
+  }
+  .badge-red {
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--nids-red);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+  }
+  .badge-orange {
+    background: rgba(255, 159, 67, 0.15);
+    color: var(--nids-orange);
+    border: 1px solid rgba(255, 159, 67, 0.3);
+  }
+  .badge-yellow {
+    background: rgba(255, 211, 42, 0.15);
+    color: var(--nids-yellow);
+    border: 1px solid rgba(255, 211, 42, 0.3);
+  }
+  .badge-grey {
+    background: rgba(120, 120, 140, 0.15);
+    color: #aaa;
+    border: 1px solid rgba(120, 120, 140, 0.3);
+  }
+
+  .conf-bar {
+    width: 80px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+  }
+  .conf-fill {
+    height: 100%;
+    border-radius: 3px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .conf-val {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* Attack breakdown */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .breakdown-item {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid var(--nids-accent-border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .breakdown-count {
+    font-family: "Orbitron", monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--nids-accent);
+  }
+  .breakdown-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* View Full Results Button */
+  .btn-full-results {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid var(--nids-accent-border);
+    color: var(--nids-accent);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  .btn-full-results:hover {
+    background: var(--nids-accent-dim);
+  }
+
+  /* Alert / status */
+  .alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 0.92rem;
+  }
+  .alert-warn {
+    background: rgba(255, 159, 67, 0.1);
+    border: 1px solid rgba(255, 159, 67, 0.3);
+    color: var(--nids-orange);
+  }
+  .alert-info {
+    background: var(--nids-accent-dim);
+    border: 1px solid var(--nids-accent-border);
+    color: var(--nids-accent);
+  }
+  .alert-error {
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: var(--nids-red);
+  }
+
+  /* Feature card color overrides */
+  .feature-card-icon {
+    font-size: 2.4rem;
+    margin-bottom: 14px;
+  }
+  .feature-card:nth-child(1) .feature-card-icon {
+    color: var(--nids-accent);
+  }
+  .feature-card:nth-child(2) .feature-card-icon {
+    color: var(--nids-orange);
+  }
+  .feature-card:nth-child(3) .feature-card-icon {
+    color: var(--nids-green);
+  }
+
+  /* Recent sessions */
+  .recent-section {
+    padding: 20px 0 60px;
+  }
+  .section-title {
+    font-family: "Orbitron", monospace;
+    color: var(--nids-accent);
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+  .session-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    background: rgba(26, 26, 46, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .session-src {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 140px;
+  }
+  .session-time {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+  }
+  .session-link {
+    color: var(--nids-accent);
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .session-link:hover {
+    text-decoration: underline;
+  }
+
+  /* ===== FULL RESULTS PAGE ===== */
+  .report-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+  .report-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--nids-accent);
+    text-decoration: none;
+    font-size: 0.92rem;
+    margin-bottom: 24px;
+    transition: opacity 0.2s;
+  }
+  .report-back:hover {
+    opacity: 0.7;
+  }
+  .report-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .report-header h1 {
+    font-family: "Orbitron", monospace;
+    color: var(--nids-accent);
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  .report-meta {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+  .report-meta span {
+    margin: 0 10px;
+  }
+  .report-stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .report-stat-card {
+    background: rgba(26, 26, 46, 0.6);
+    border: 1px solid var(--nids-accent-border);
+    border-radius: 14px;
+    padding: 20px 28px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .report-stat-card .val {
+    font-family: "Orbitron", monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--nids-accent);
+  }
+  .report-stat-card.danger .val {
+    color: var(--nids-red);
+  }
+  .report-stat-card.ok .val {
+    color: var(--nids-green);
+  }
+  .report-stat-card.warn .val {
+    color: var(--nids-orange);
+  }
+  .report-stat-card .lbl {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .report-section-title {
+    color: var(--nids-accent);
+    font-family: "Orbitron", monospace;
+    font-size: 1.05rem;
+    margin-bottom: 14px;
+  }
+  .report-download-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: 1px solid var(--nids-accent-border);
+    color: var(--nids-accent);
+    background: transparent;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  .btn-download:hover {
+    background: var(--nids-accent-dim);
+  }
+</style>
+{% endblock %} {% block content %} {% if not show_results %}
+<!-- Hero -->
+<section class="service-hero">
+  <div class="container">
+    <h1 class="glitch" data-text="NETWORK IDS">
+      NETWORK IDS<span class="version-badge">v1.0</span>
+    </h1>
+    <p class="hero-subtitle">
+      Real-time network intrusion detection powered by ensemble machine learning
+      — Upload a PCAP file or capture live traffic to classify flows as Benign,
+      DoS, DDoS, Port Scan, Brute Force, Web Attack, or Botnet/C2.
+    </p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-number">7</span>
+        <div class="stat-label">Attack Classes</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">78</span>
+        <div class="stat-label">Flow Features</div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">2s</span>
+        <div class="stat-label">Poll Interval</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mode Select + Forms -->
+<section class="mode-section">
+  <div class="container">
+    {% if not scapy_available %}
+    <div class="alert alert-warn" style="max-width: 680px; margin: 0 auto 24px">
+      <i class="fas fa-exclamation-triangle"></i>
+      <strong>Scapy not installed.</strong> PCAP parsing and live capture
+      require Scapy. Run: <code>pip install scapy</code>
+    </div>
+    {% endif %} {% if not model_loaded %}
+    <div class="alert alert-info" style="max-width: 680px; margin: 0 auto 24px">
+      <i class="fas fa-info-circle"></i>
+      <strong>ML model not loaded.</strong> Train the model first: open
+      <code>Services/NetworkIDS/model.ipynb</code> and run all cells, then copy
+      the <code>.joblib</code> files to <code>App/NetworkIDS/models/</code>. The
+      system will fall back to heuristic classification until the model is
+      available.
+    </div>
+    {% endif %}
+
+    <!-- Mode toggle buttons -->
+    <div class="mode-toggle">
+      <button
+        class="mode-btn active"
+        id="btn-pcap"
+        onclick="switchMode('pcap')"
+      >
+        <i class="fas fa-file-archive"></i> Upload PCAP File
+      </button>
+      <button class="mode-btn" id="btn-live" onclick="switchMode('live')">
+        <i class="fas fa-broadcast-tower"></i> Live Capture
+      </button>
+    </div>
+
+    <!-- ---- PCAP Upload Panel ---- -->
+    <div class="mode-panel active" id="panel-pcap">
+      <div class="analysis-card">
+        <div class="form-header">
+          <h2><i class="fas fa-file-archive"></i> PCAP Analysis</h2>
+          <p>
+            Upload a .pcap or .pcapng file captured with Wireshark, tcpdump, or
+            any compatible tool.
+          </p>
+        </div>
+
+        <div
+          id="upload-area-pcap"
+          class="file-upload-area"
+          onclick="document.getElementById('pcap-input').click()"
+        >
+          <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <p class="upload-text">Drag &amp; drop your PCAP file here</p>
+          <p class="upload-hint">.pcap / .pcapng / .cap — max 100 MB</p>
+        </div>
+        <input
+          type="file"
+          id="pcap-input"
+          class="file-input"
+          accept=".pcap,.pcapng,.cap"
+        />
+
+        <div id="selected-file-pcap" class="selected-file">
+          <div class="file-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="file-details">
+            <div class="file-name" id="pcap-file-name">filename.pcap</div>
+            <div class="file-size" id="pcap-file-size">0 MB</div>
+          </div>
+          <button class="remove-file" onclick="clearPcapFile(event)">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <button
+          class="btn-analyze"
+          id="btn-analyze-pcap"
+          onclick="startPcapAnalysis()"
+          disabled
+        >
+          <i class="fas fa-search"></i> Analyze PCAP
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Live Capture Panel ---- -->
+    <div class="mode-panel" id="panel-live">
+      <div class="analysis-card">
+        <div class="form-header">
+          <h2><i class="fas fa-broadcast-tower"></i> Live Capture</h2>
+          <p>
+            Capture packets directly from a network interface. Requires running
+            Django as Administrator (Windows) or root (Linux/Mac).
+          </p>
+        </div>
+
+        {% if not npcap_available %}
+        <div
+          class="alert-banner"
+          style="
+            background: rgba(255, 200, 0, 0.12);
+            border: 1px solid #ffcc00;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            color: #ffe066;
+            font-size: 0.92rem;
+          "
+        >
+          <i class="fas fa-info-circle" style="margin-right: 8px"></i>
+          <strong>Running in L3 mode</strong> (Npcap not detected).<br />
+          IP packets addressed to <em>this host</em> will be captured. For full
+          promiscuous capture of all network traffic,
+          <a href="https://npcap.com/" target="_blank" style="color: #00e5ff"
+            >install Npcap</a
+          >
+          (enable <em>WinPcap API-compatible mode</em>) and restart Django as
+          <strong>Administrator</strong>.
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label" for="iface-input"
+            ><i class="fas fa-network-wired"></i> Network Interface</label
+          >
+          <select class="form-control" id="iface-input">
+            {% for iface in interfaces %}
+            <option value="{{ iface.guid }}">{{ iface.name }}</option>
+            {% empty %}
+            <option value="">No interfaces detected</option>
+            {% endfor %}
+          </select>
+          <div class="form-hint">
+            {% if npcap_available %} Select the interface to capture from. Run
+            Django as Administrator for live capture. {% else %} L3 mode:
+            interface selection is informational — all IP traffic to this host
+            is captured. {% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"
+            ><i class="fas fa-clock"></i> Capture Duration:
+            <span class="duration-display" id="duration-display"
+              >10s</span
+            ></label
+          >
+          <input
+            type="range"
+            class="range-slider"
+            id="duration-slider"
+            min="5"
+            max="60"
+            value="10"
+            oninput="updateDuration(this.value)"
+          />
+          <div class="form-hint">
+            5 – 60 seconds. Longer captures produce more flows.
+          </div>
+        </div>
+
+        <button
+          class="btn-analyze"
+          id="btn-analyze-live"
+          onclick="startLiveCapture()"
+        >
+          <i class="fas fa-play-circle"></i> Start Capture
+        </button>
+        <button class="btn-stop" id="btn-stop-live" onclick="stopCapture()">
+          <i class="fas fa-stop-circle"></i> Stop Early
+        </button>
+      </div>
+    </div>
+
+    <!-- ---- Progress + Results Panel ---- -->
+    <div class="progress-panel" id="progress-panel">
+      <div class="analysis-card" style="max-width: 860px">
+        <!-- Status bar -->
+        <div class="progress-card">
+          <div class="progress-header">
+            <div class="progress-spinner" id="prog-spinner"></div>
+            <div class="progress-text" id="prog-text">Initialising…</div>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="prog-bar"></div>
+          </div>
+
+          <!-- Live stats -->
+          <div class="live-stats">
+            <div class="stat-box">
+              <div class="val" id="stat-total">0</div>
+              <div class="lbl">Total Flows</div>
+            </div>
+            <div class="stat-box ok">
+              <div class="val" id="stat-benign">0</div>
+              <div class="lbl">Benign</div>
+            </div>
+            <div class="stat-box danger">
+              <div class="val" id="stat-malicious">0</div>
+              <div class="lbl">Malicious</div>
+            </div>
+            <div class="stat-box warn">
+              <div class="val" id="stat-threat">0%</div>
+              <div class="lbl">Threat Score</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results preview table -->
+        <div class="results-section" id="results-section" style="display: none">
+          <div class="results-header">
+            <div class="results-title">
+              <i class="fas fa-table"></i> Flow Results (preview)
+            </div>
+            <div class="results-count" id="results-count-text">
+              Showing first 20 flows
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Src IP</th>
+                  <th>Dst IP</th>
+                  <th>Src Port</th>
+                  <th>Dst Port</th>
+                  <th>Proto</th>
+                  <th>Classification</th>
+                  <th>Confidence</th>
+                  <th>Threat</th>
+                </tr>
+              </thead>
+              <tbody id="results-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Attack breakdown -->
+          <div style="margin-top: 24px">
+            <div class="results-title" style="margin-bottom: 10px">
+              <i class="fas fa-chart-pie"></i> Attack Breakdown
+            </div>
+            <div class="breakdown-grid" id="breakdown-grid"></div>
+          </div>
+
+          <!-- Full results link -->
+          <a
+            href="#"
+            class="btn-full-results"
+            id="btn-full-results"
+            style="display: none"
+          >
+            <i class="fas fa-external-link-alt"></i> View Full Results &amp;
+            Download Report
+          </a>
+
+          <!-- New analysis button -->
+          <button
+            class="btn-analyze"
+            style="margin-top: 14px"
+            onclick="resetForm()"
+          >
+            <i class="fas fa-redo"></i> New Analysis
+          </button>
+        </div>
+
+        <!-- Error display -->
+        <div
+          class="alert alert-error"
+          id="error-panel"
+          style="display: none; margin-top: 16px"
+        >
+          <i class="fas fa-exclamation-circle"></i>
+          <span id="error-text"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature cards -->
+<section class="service-features-section">
+  <div class="container">
+    <h2 class="section-title">IDS Capabilities</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-card-icon"><i class="fas fa-layer-group"></i></div>
+        <h4>Ensemble ML</h4>
+        <p>
+          Random Forest + XGBoost soft-voting ensemble trained on CICIDS2017 —
+          98%+ accuracy across 7 attack classes.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">
+          <i class="fas fa-tachometer-alt"></i>
+        </div>
+        <h4>78 Flow Features</h4>
+        <p>
+          CICFlowMeter-compatible bidirectional flow statistics: IAT, packet
+          length, TCP flags, bulk rates, and more.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">
+          <i class="fas fa-project-diagram"></i>
+        </div>
+        <h4>Dual Input</h4>
+        <p>
+          Analyse stored PCAP files directly from Wireshark/tcpdump, or capture
+          live traffic from any network interface.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Recent sessions -->
+{% if recent_sessions %}
+<section class="recent-section">
+  <div class="container" style="max-width: 860px">
+    <div class="section-title">
+      <i class="fas fa-history"></i> Recent Analyses
+    </div>
+    {% for s in recent_sessions %}
+    <div class="session-row">
+      <div>
+        {% if s.source_type == 'pcap_upload' %}
+        <i
+          class="fas fa-file-archive"
+          style="color: var(--nids-accent); margin-right: 8px"
+        ></i
+        >{{ s.pcap_file_name|default:"PCAP Upload" }} {% else %}
+        <i
+          class="fas fa-broadcast-tower"
+          style="color: var(--nids-accent); margin-right: 8px"
+        ></i
+        >{{ s.interface_name }} ({{ s.capture_duration }}s) {% endif %}
+      </div>
+      <div class="session-src">
+        {{ s.total_flows }} flows · {{ s.malicious_flows }} malicious
+      </div>
+      <span
+        class="badge {% if s.status == 'complete' %}badge-green{% elif s.status == 'error' %}badge-red{% else %}badge-yellow{% endif %}"
+        >{{ s.status }}</span
+      >
+      <div class="session-time">{{ s.started_at|date:"M d H:i" }}</div>
+      {% if s.status == 'complete' %}
+      <a
+        class="session-link"
+        href="{% url 'NetworkIDS:get_results' s.session_id %}"
+      >
+        <i class="fas fa-external-link-alt"></i> View
+      </a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %} {% else %}
+<!-- ===================== FULL RESULTS REPORT ===================== -->
+<div class="report-container">
+  <a href="{% url 'NetworkIDS:index' %}" class="report-back">
+    <i class="fas fa-arrow-left"></i> Back to Network IDS
+  </a>
+
+  <div class="report-header">
+    <h1><i class="fas fa-shield-alt"></i> Analysis Report</h1>
+    <div class="report-meta">
+      {% if session.source_type == 'pcap_upload' %}
+      <i class="fas fa-file-archive"></i> {{
+      session.pcap_file_name|default:"PCAP Upload" }} {% else %}
+      <i class="fas fa-broadcast-tower"></i> {{ session.interface_name }} ({{
+      session.capture_duration }}s) {% endif %}
+      <span>&middot;</span>
+      <i class="fas fa-clock"></i> {{ session.started_at|date:"M d, Y H:i" }} {%
+      if session.completed_at %}
+      <span>&middot;</span>
+      Duration: {{ session.started_at|timesince:session.completed_at }} {% endif
+      %}
+    </div>
+  </div>
+
+  <!-- Summary stats -->
+  {% with benign=session.total_flows|add:0 %}
+  <div class="report-stats-row">
+    <div class="report-stat-card">
+      <div class="val">{{ session.total_flows }}</div>
+      <div class="lbl">Total Flows</div>
+    </div>
+    <div class="report-stat-card ok">
+      <div class="val">{{ benign_flows }}</div>
+      <div class="lbl">Benign</div>
+    </div>
+    <div class="report-stat-card danger">
+      <div class="val">{{ session.malicious_flows }}</div>
+      <div class="lbl">Malicious</div>
+    </div>
+    <div class="report-stat-card warn">
+      <div class="val">{{ threat_score }}%</div>
+      <div class="lbl">Threat Score</div>
+    </div>
+  </div>
+  {% endwith %}
+
+  <!-- Attack Breakdown -->
+  {% if label_counts %}
+  <div style="margin-bottom: 32px">
+    <div class="report-section-title">
+      <i class="fas fa-chart-pie"></i> Attack Breakdown
+    </div>
+    <div class="breakdown-grid">
+      {% for label, count in label_counts.items %}
+      <div class="breakdown-item">
+        <div class="breakdown-count">{{ count }}</div>
+        <div class="breakdown-label">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Download / Export -->
+  <div class="report-download-row">
+    <button class="btn-download" onclick="downloadJSON()">
+      <i class="fas fa-download"></i> Download JSON
+    </button>
+    <button class="btn-download" onclick="downloadCSV()">
+      <i class="fas fa-file-csv"></i> Download CSV
+    </button>
+  </div>
+
+  <!-- Full results table -->
+  <div class="results-section" style="display: block">
+    <div class="results-header">
+      <div class="results-title">
+        <i class="fas fa-table"></i> All Flow Results
+      </div>
+      <div class="results-count">
+        {{ results|length }} flow{{ results|length|pluralize }}
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Src IP</th>
+            <th>Dst IP</th>
+            <th>Src Port</th>
+            <th>Dst Port</th>
+            <th>Proto</th>
+            <th>Classification</th>
+            <th>Confidence</th>
+            <th>Threat</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          <tr>
+            <td style="color: var(--text-secondary)">{{ forloop.counter }}</td>
+            <td>{{ r.src_ip }}</td>
+            <td>{{ r.dst_ip }}</td>
+            <td>{{ r.src_port }}</td>
+            <td>{{ r.dst_port }}</td>
+            <td>{{ r.protocol }}</td>
+            <td>
+              <span
+                class="badge {% if r.colour == 'green' %}badge-green {% elif r.colour == 'red' %}badge-red {% elif r.colour == 'orange' %}badge-orange {% elif r.colour == 'yellow' %}badge-yellow {% else %}badge-grey{% endif %}"
+                >{{ r.label }}</span
+              >
+            </td>
+            <td>
+              <span class="conf-bar">
+                <span
+                  class="conf-fill"
+                  style="width:{{ r.confidence }}%;
+                  {% if r.confidence >= 80 %}background:#0be881
+                  {% elif r.confidence >= 50 %}background:#ff9f43
+                  {% else %}background:#ff4757{% endif %}
+                "
+                ></span>
+              </span>
+              <span class="conf-val">{{ r.confidence }}%</span>
+            </td>
+            <td>
+              <span
+                class="badge {% if r.threat_level == 'HIGH' %}badge-red {% elif r.threat_level == 'MEDIUM' %}badge-orange {% else %}badge-green{% endif %}"
+                >{{ r.threat_level }}</span
+              >
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td
+              colspan="9"
+              style="
+                text-align: center;
+                color: var(--text-secondary);
+                padding: 24px;
+              "
+            >
+              No flows detected in this analysis.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Back to new analysis -->
+  <div style="text-align: center; margin-top: 28px">
+    <a
+      href="{% url 'NetworkIDS:index' %}"
+      class="btn-full-results"
+      style="display: inline-block; max-width: 400px"
+    >
+      <i class="fas fa-redo"></i> New Analysis
+    </a>
+  </div>
+</div>
+{% endif %} {% endblock %} {% block extra_js %} {% if show_results %}
+<script>
+  /* ===== Results page — download helpers ===== */
+  const REPORT_DATA = {{ results_json|safe }};
+
+  function downloadJSON() {
+    const blob = new Blob([JSON.stringify(REPORT_DATA, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'nids_report_{{ session.session_id }}.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function downloadCSV() {
+    if (!REPORT_DATA.length) return;
+    const headers = ['#', 'Src IP', 'Dst IP', 'Src Port', 'Dst Port', 'Protocol', 'Classification', 'Confidence', 'Threat Level'];
+    const rows = REPORT_DATA.map((r, i) => [
+      i + 1, r.src_ip, r.dst_ip, r.src_port, r.dst_port, r.protocol, r.label, r.confidence + '%', r.threat_level
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'nids_report_{{ session.session_id }}.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+</script>
+{% else %}
+<script>
+  /* =====================================================================
+   NetworkIDS — frontend JS
+   Handles: mode toggle, file selection, drag-drop, polling loop
+   ===================================================================== */
+
+  let currentMode = "pcap";
+  let selectedFile = null;
+  let currentSession = null;
+  let pollInterval = null;
+  const POLL_MS = 2000;
+
+  // ----- Mode toggle -----
+
+  function switchMode(mode) {
+    currentMode = mode;
+    document
+      .getElementById("panel-pcap")
+      .classList.toggle("active", mode === "pcap");
+    document
+      .getElementById("panel-live")
+      .classList.toggle("active", mode === "live");
+    document
+      .getElementById("btn-pcap")
+      .classList.toggle("active", mode === "pcap");
+    document
+      .getElementById("btn-live")
+      .classList.toggle("active", mode === "live");
+  }
+
+  // ----- Duration slider -----
+
+  function updateDuration(v) {
+    document.getElementById("duration-display").textContent = v + "s";
+  }
+
+  // ----- PCAP file selection -----
+
+  const pcapInput = document.getElementById("pcap-input");
+  const uploadArea = document.getElementById("upload-area-pcap");
+
+  pcapInput.addEventListener("change", (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  uploadArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadArea.classList.add("dragover");
+  });
+  uploadArea.addEventListener("dragleave", () =>
+    uploadArea.classList.remove("dragover"),
+  );
+  uploadArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove("dragover");
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    const allowed = [".pcap", ".pcapng", ".cap"];
+    const ext = "." + file.name.split(".").pop().toLowerCase();
+    if (!allowed.includes(ext)) {
+      showAlert(
+        "Unsupported file type. Please upload a .pcap, .pcapng, or .cap file.",
+        "warn",
+      );
+      return;
+    }
+    if (file.size > 104_857_600) {
+      showAlert("File is too large (max 100 MB).", "warn");
+      return;
+    }
+    selectedFile = file;
+    document.getElementById("pcap-file-name").textContent = file.name;
+    document.getElementById("pcap-file-size").textContent =
+      (file.size / 1048576).toFixed(2) + " MB";
+    document.getElementById("selected-file-pcap").classList.add("show");
+    document.getElementById("btn-analyze-pcap").disabled = false;
+  }
+
+  function clearPcapFile(event) {
+    event.stopPropagation();
+    selectedFile = null;
+    pcapInput.value = "";
+    document.getElementById("selected-file-pcap").classList.remove("show");
+    document.getElementById("btn-analyze-pcap").disabled = true;
+  }
+
+  // ----- Start PCAP analysis -----
+
+  function startPcapAnalysis() {
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("source_type", "pcap_upload");
+    formData.append("pcap_file", selectedFile);
+
+    document.getElementById("btn-analyze-pcap").disabled = true;
+    document.getElementById("btn-analyze-pcap").innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Uploading…';
+
+    fetch('{% url "NetworkIDS:start_analysis" %}', {
+      method: "POST",
+      body: formData,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          showAlert(data.error, "error");
+          resetAnalyzeBtn();
+          return;
+        }
+        currentSession = data.session_id;
+        showProgressPanel();
+        startPolling();
+      })
+      .catch((err) => {
+        showAlert("Upload failed: " + err.message, "error");
+        resetAnalyzeBtn();
+      });
+  }
+
+  // ----- Start live capture -----
+
+  function startLiveCapture() {
+    const iface = document.getElementById("iface-input").value.trim();
+    const duration = document.getElementById("duration-slider").value;
+    if (!iface) {
+      showAlert("Please select a network interface.", "warn");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("source_type", "live_capture");
+    formData.append("interface", iface);
+    formData.append("duration", duration);
+
+    document.getElementById("btn-analyze-live").disabled = true;
+    document.getElementById("btn-analyze-live").innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Starting…';
+    document.getElementById("btn-stop-live").classList.add("show");
+
+    fetch('{% url "NetworkIDS:start_analysis" %}', {
+      method: "POST",
+      body: formData,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          showAlert(data.error, "error");
+          resetAnalyzeBtn();
+          return;
+        }
+        currentSession = data.session_id;
+        showProgressPanel();
+        startPolling();
+      })
+      .catch((err) => {
+        showAlert("Failed to start capture: " + err.message, "error");
+        resetAnalyzeBtn();
+      });
+  }
+
+  // ----- Stop live capture -----
+
+  function stopCapture() {
+    if (!currentSession) return;
+    fetch(`/networkids/stop/${currentSession}/`, { method: "POST" });
+  }
+
+  // ----- Polling -----
+
+  function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(poll, POLL_MS);
+    poll(); // immediate first call
+  }
+
+  function stopPolling() {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+  }
+
+  function poll() {
+    if (!currentSession) return;
+    fetch(`/networkids/status/${currentSession}/`)
+      .then((r) => r.json())
+      .then((data) => {
+        updateProgressUI(data);
+        if (data.status === "complete" || data.status === "error") {
+          stopPolling();
+          if (data.status === "complete") onComplete(data);
+          else
+            onError(data.error_message || "An error occurred during analysis.");
+        }
+      })
+      .catch((err) => console.warn("Poll error:", err));
+  }
+
+  // ----- UI updates -----
+
+  function showProgressPanel() {
+    document.getElementById("progress-panel").classList.add("active");
+    window.scrollTo({
+      top: document.getElementById("progress-panel").offsetTop - 80,
+      behavior: "smooth",
+    });
+  }
+
+  function updateProgressUI(data) {
+    const statusLabels = {
+      pending: "Waiting to start…",
+      capturing: "Capturing live packets…",
+      analyzing: "Analysing network flows…",
+      complete: "Analysis complete!",
+      error: "Error during analysis",
+    };
+
+    document.getElementById("prog-text").textContent =
+      statusLabels[data.status] || data.status;
+    document.getElementById("stat-total").textContent = data.total_flows;
+    document.getElementById("stat-benign").textContent = data.benign_flows;
+    document.getElementById("stat-malicious").textContent =
+      data.malicious_flows;
+    document.getElementById("stat-threat").textContent =
+      data.threat_score + "%";
+
+    // Progress bar heuristic
+    const barPct =
+      data.status === "complete"
+        ? 100
+        : data.status === "analyzing"
+          ? 70
+          : data.status === "capturing"
+            ? 40
+            : 10;
+    document.getElementById("prog-bar").style.width = barPct + "%";
+
+    const spinner = document.getElementById("prog-spinner");
+    if (data.status === "complete") spinner.style.animation = "none";
+  }
+
+  function onComplete(data) {
+    document.getElementById("results-section").style.display = "block";
+
+    // Populate table from preview
+    const tbody = document.getElementById("results-tbody");
+    tbody.innerHTML = "";
+    (data.results_preview || []).forEach((r) => {
+      tbody.insertAdjacentHTML("beforeend", buildRow(r));
+    });
+
+    document.getElementById("results-count-text").textContent =
+      `Showing ${(data.results_preview || []).length} of ${data.total_flows} flows`;
+
+    // Full results link
+    const fullBtn = document.getElementById("btn-full-results");
+    fullBtn.href = `/networkids/results/${currentSession}/`;
+    fullBtn.style.display = "block";
+
+    // Attack breakdown (we'll compute from preview; full data is on results page)
+    const counts = {};
+    (data.results_preview || []).forEach((r) => {
+      counts[r.label] = (counts[r.label] || 0) + 1;
+    });
+    const grid = document.getElementById("breakdown-grid");
+    grid.innerHTML = "";
+    Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([lbl, cnt]) => {
+        grid.insertAdjacentHTML(
+          "beforeend",
+          `<div class="breakdown-item"><div class="breakdown-count">${cnt}</div><div class="breakdown-label">${lbl}</div></div>`,
+        );
+      });
+
+    // Stop capture button hidden
+    document.getElementById("btn-stop-live").classList.remove("show");
+  }
+
+  function onError(msg) {
+    document.getElementById("error-panel").style.display = "block";
+    document.getElementById("error-text").textContent = msg;
+    document.getElementById("prog-spinner").style.animation = "none";
+    document.getElementById("btn-stop-live").classList.remove("show");
+    resetAnalyzeBtn();
+  }
+
+  function buildRow(r) {
+    const colourClass =
+      {
+        green: "badge-green",
+        red: "badge-red",
+        orange: "badge-orange",
+        yellow: "badge-yellow",
+        grey: "badge-grey",
+      }[r.colour] || "badge-grey";
+
+    const threatClass =
+      r.threat_level === "HIGH"
+        ? "badge-red"
+        : r.threat_level === "MEDIUM"
+          ? "badge-orange"
+          : "badge-green";
+
+    const confPct = Math.min(Math.max(r.confidence, 0), 100);
+    const confColor =
+      confPct >= 80 ? "#0be881" : confPct >= 50 ? "#ff9f43" : "#ff4757";
+
+    return `<tr>
+    <td>${r.src_ip}</td>
+    <td>${r.dst_ip}</td>
+    <td>${r.src_port}</td>
+    <td>${r.dst_port}</td>
+    <td>${r.protocol}</td>
+    <td><span class="badge ${colourClass}">${r.label}</span></td>
+    <td>
+      <span class="conf-bar"><span class="conf-fill" style="width:${confPct}%;background:${confColor}"></span></span>
+      <span class="conf-val">${r.confidence}%</span>
+    </td>
+    <td><span class="badge ${threatClass}">${r.threat_level}</span></td>
+  </tr>`;
+  }
+
+  function showAlert(msg, type) {
+    const cls =
+      { warn: "alert-warn", error: "alert-error", info: "alert-info" }[type] ||
+      "alert-info";
+    const div = document.createElement("div");
+    div.className = `alert ${cls}`;
+    div.style.cssText = "max-width:680px;margin:0 auto 16px;";
+    div.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+    document.querySelector(".mode-section .container").prepend(div);
+    setTimeout(() => div.remove(), 6000);
+  }
+
+  function resetAnalyzeBtn() {
+    document.getElementById("btn-analyze-pcap").disabled = !selectedFile;
+    document.getElementById("btn-analyze-pcap").innerHTML =
+      '<i class="fas fa-search"></i> Analyze PCAP';
+    document.getElementById("btn-analyze-live").disabled = false;
+    document.getElementById("btn-analyze-live").innerHTML =
+      '<i class="fas fa-play-circle"></i> Start Capture';
+  }
+
+  function resetForm() {
+    stopPolling();
+    currentSession = null;
+    selectedFile = null;
+    pcapInput.value = "";
+    document.getElementById("selected-file-pcap").classList.remove("show");
+    document.getElementById("btn-analyze-pcap").disabled = true;
+    document.getElementById("progress-panel").classList.remove("active");
+    document.getElementById("results-section").style.display = "none";
+    document.getElementById("error-panel").style.display = "none";
+    document.getElementById("btn-stop-live").classList.remove("show");
+    document.getElementById("prog-bar").style.width = "0%";
+    document.getElementById("stat-total").textContent = "0";
+    document.getElementById("stat-benign").textContent = "0";
+    document.getElementById("stat-malicious").textContent = "0";
+    document.getElementById("stat-threat").textContent = "0%";
+    document.getElementById("results-tbody").innerHTML = "";
+    document.getElementById("breakdown-grid").innerHTML = "";
+    resetAnalyzeBtn();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+</script>
+{% endif %} {% endblock %}

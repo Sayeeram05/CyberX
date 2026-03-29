@@ -1,0 +1,63 @@
+# ==============================
+# CyberX .gitignore
+# ==============================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# ---------- Virtual Environment ----------
+env/
+venv/
+.venv/
+ENV/
+
+# ---------- Django ----------
+*.log
+db.sqlite3
+db.sqlite3-journal
+/App/media/
+/App/staticfiles/
+*.pot
+*.mo
+
+# ---------- IDE / Editor ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Environment Variables ----------
+.env
+.env.*
+
+# ---------- ML Model Files (large binaries) ----------
+*.joblib
+*.pth
+*.pkl
+*.h5
+*.onnx
+
+# ---------- Datasets ----------
+/Services/Phishing-detection/Dataset/
+/Services/NetworkIDS/Dataset/
+/Services/MalwareAnalysis/models/
+/Services/URL threat scanning/models/
+
+# ---------- Jupyter Notebooks ----------
+.ipynb_checkpoints/
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}CyberX - Advanced Cybersecurity Platform{% endblock %}
+    </title>
+    {% load static %}
+
+    <!-- Modern fonts and icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <!-- Loading bar -->
+    <div class="loading-bar"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="main-navbar">
+      <div class="nav-container">
+        <a href="/" class="logo-link">
+          <div class="logo">
+            <span class="logo-icon"><i class="fas fa-shield-halved"></i></span>
+            CYBER<span class="logo-accent">X</span>
+          </div>
+        </a>
+
+        <!-- Mobile toggle -->
+        <button
+          class="nav-toggle"
+          id="nav-toggle"
+          aria-label="Toggle navigation"
+        >
+          <span class="hamburger"></span>
+        </button>
+
+        <ul class="nav-links" id="nav-links">
+          <li>
+            <a href="/" data-page="home"><i class="fas fa-house"></i> Home</a>
+          </li>
+          <li class="nav-dropdown">
+            <a href="/#services" class="dropdown-trigger"
+              ><i class="fas fa-cube"></i> Services
+              <i class="fas fa-chevron-down dropdown-arrow"></i
+            ></a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/emailvalidation/"
+                  ><i class="fas fa-envelope-circle-check"></i> Email
+                  Validation</a
+                >
+              </li>
+              <li>
+                <a href="/urlthreatdetection/"
+                  ><i class="fas fa-link"></i> URL Threat Detection</a
+                >
+              </li>
+              <li>
+                <a href="/phishingdetection/"
+                  ><i class="fas fa-fish"></i> Phishing Detection</a
+                >
+              </li>
+              <li>
+                <a href="/malwareanalysis/"
+                  ><i class="fas fa-bug"></i> Malware Analysis</a
+                >
+              </li>
+              <li>
+                <a href="/networkids/"
+                  ><i class="fas fa-network-wired"></i> Network IDS</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li>
+            <a href="/#about" data-page="about"
+              ><i class="fas fa-info-circle"></i> About</a
+            >
+          </li>
+          <li>
+            <a href="/#contact" data-page="contact"
+              ><i class="fas fa-paper-plane"></i> Contact</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="main-content">{% block content %} {% endblock %}</main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <span class="logo-icon"
+                ><i class="fas fa-shield-halved"></i
+              ></span>
+              CYBER<span class="logo-accent">X</span>
+            </div>
+            <p class="footer-tagline">
+              Advanced cybersecurity powered by machine learning. Protecting
+              digital assets with next-gen threat detection.
+            </p>
+          </div>
+          <div class="footer-col">
+            <h4>Services</h4>
+            <ul>
+              <li><a href="/emailvalidation/">Email Validation</a></li>
+              <li><a href="/urlthreatdetection/">URL Threat Detection</a></li>
+              <li><a href="/phishingdetection/">Phishing Detection</a></li>
+              <li><a href="/malwareanalysis/">Malware Analysis</a></li>
+              <li><a href="/networkids/">Network IDS</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Platform</h4>
+            <ul>
+              <li><a href="/#about">About CyberX</a></li>
+              <li><a href="/#contact">Contact Us</a></li>
+              <li><a href="#">Documentation</a></li>
+              <li><a href="#">API Access</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>
+            &copy; 2026 CyberX. Advanced Cybersecurity Platform. All rights
+            reserved.
+          </p>
+          <div class="footer-socials">
+            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="#" aria-label="Twitter"
+              ><i class="fab fa-x-twitter"></i
+            ></a>
+            <a href="#" aria-label="LinkedIn"
+              ><i class="fab fa-linkedin-in"></i
+            ></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

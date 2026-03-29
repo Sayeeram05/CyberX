@@ -1,0 +1,206 @@
+{% extends 'base.html' %} {% load static %} {% block title %}CyberX - Advanced
+Cybersecurity Platform{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}" />
+{% endblock %} {% block content %}
+<!-- Hero Section -->
+<section id="home" class="hero-section">
+  <div class="container">
+    <h1 class="glitch" data-text="CYBERX">CYBERX</h1>
+    <p class="hero-subtitle">&#9670; Advanced Cybersecurity Platform &#9670;</p>
+    <p class="hero-description">
+      Centralized cybersecurity platform integrating multiple AI-driven security
+      services under one unified interface. Your complete command center for
+      threat detection, analysis, and protection.
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Security Modules</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">99.9%</div>
+        <div class="stat-label">Accuracy Rate</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">24/7</div>
+        <div class="stat-label">Active Protection</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="services-section">
+  <div class="container">
+    <h2 class="section-title">Security Services</h2>
+    <div class="services-grid">
+      <!-- Phishing Detection -->
+      <div class="service-card card">
+        <div class="service-icon">
+          <i class="fas fa-fish"></i>
+        </div>
+        <h3>Phishing Detection</h3>
+        <p>
+          AI-powered phishing detection system that identifies malicious emails,
+          fake websites, and social engineering attacks in real-time.
+        </p>
+        <div class="service-features">
+          <span class="feature-tag">AI Detection</span>
+          <span class="feature-tag">Real-time</span>
+          <span class="feature-tag">99.8% Accuracy</span>
+        </div>
+        <a href="/phishingdetection/" class="btn service-btn">
+          <i class="fas fa-arrow-right"></i> Launch
+        </a>
+      </div>
+
+      <!-- Malware Analysis -->
+      <div class="service-card card">
+        <div class="service-icon">
+          <i class="fas fa-bug"></i>
+        </div>
+        <h3>Malware Analysis</h3>
+        <p>
+          Comprehensive malware analysis engine that detects, classifies, and
+          provides detailed reports on suspicious files and executables.
+        </p>
+        <div class="service-features">
+          <span class="feature-tag">Behavioral</span>
+          <span class="feature-tag">Sandbox</span>
+          <span class="feature-tag">Deep Scan</span>
+        </div>
+        <a href="/malwareanalysis/" class="btn service-btn">
+          <i class="fas fa-arrow-right"></i> Launch
+        </a>
+      </div>
+
+      <!-- Email Validation -->
+      <div class="service-card card">
+        <div class="service-icon">
+          <i class="fas fa-envelope-open-text"></i>
+        </div>
+        <h3>Email Validation</h3>
+        <p>
+          Smart email validation service that verifies authenticity, checks for
+          spoofing, and validates sender reputation in seconds.
+        </p>
+        <div class="service-features">
+          <span class="feature-tag">SPF Check</span>
+          <span class="feature-tag">DKIM</span>
+          <span class="feature-tag">Reputation</span>
+        </div>
+        <a href="/emailvalidation/" class="btn service-btn">
+          <i class="fas fa-arrow-right"></i> Launch
+        </a>
+      </div>
+
+      <!-- URL Threat Scanning -->
+      <div class="service-card card">
+        <div class="service-icon">
+          <i class="fas fa-link"></i>
+        </div>
+        <h3>URL Threat Scanning</h3>
+        <p>
+          Advanced URL analysis scanning websites for malicious content,
+          phishing attempts, and security vulnerabilities in real-time.
+        </p>
+        <div class="service-features">
+          <span class="feature-tag">Real-time</span>
+          <span class="feature-tag">Reputation DB</span>
+          <span class="feature-tag">SSL Check</span>
+        </div>
+        <a href="/urlthreatdetection/" class="btn service-btn">
+          <i class="fas fa-arrow-right"></i> Launch
+        </a>
+      </div>
+
+      <!-- Network Intrusion Detection -->
+      <div class="service-card card">
+        <div class="service-icon">
+          <i class="fas fa-network-wired"></i>
+        </div>
+        <h3>Network IDS</h3>
+        <p>
+          Intelligent network intrusion detection monitoring traffic for
+          unauthorized access, anomalies, and potential breaches.
+        </p>
+        <div class="service-features">
+          <span class="feature-tag">Traffic Analysis</span>
+          <span class="feature-tag">Anomaly</span>
+          <span class="feature-tag">Auto-Block</span>
+        </div>
+        <a href="/networkids/" class="btn service-btn">
+          <i class="fas fa-arrow-right"></i> Launch
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <h2 class="section-title">Why Choose CyberX?</h2>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <h4>Lightning Fast</h4>
+        <p>
+          Ultra-fast threat detection with optimized ML inference pipelines.
+        </p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="fas fa-code"></i>
+        </div>
+        <h4>Unified API</h4>
+        <p>
+          Single interface for all security services &mdash; one integration,
+          full protection.
+        </p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="fas fa-robot"></i>
+        </div>
+        <h4>AI Powered</h4>
+        <p>
+          Advanced ML models for accurate, adaptive threat detection and
+          prevention.
+        </p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h4>Real-time Analytics</h4>
+        <p>Comprehensive dashboards and real-time metrics for every scan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <h2>Ready to Secure Your Digital Assets?</h2>
+      <p>
+        Deploy CyberX to protect your organization with enterprise-grade
+        AI-driven cybersecurity.
+      </p>
+      <div class="cta-buttons">
+        <a href="#services" class="btn btn-primary"
+          ><i class="fas fa-rocket"></i> Get Started</a
+        >
+        <a href="https://github.com" target="_blank" class="btn btn-secondary"
+          ><i class="fab fa-github"></i> View on GitHub</a
+        >
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
